@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [toDelete, setToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [showDownload, setShowDownload] = useState(false);
+  const [showFilteredDownload, setShowFilteredDownload] = useState(false);
 
   // Filters (empty string = "All")
   const [doneByFilter, setDoneByFilter] = useState('');
@@ -174,9 +175,14 @@ export default function Dashboard() {
             </select>
           </div>
 
-          <button className="btn-outline" onClick={clearFilters} disabled={!hasFilter}>
-            Clear filters
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-outline" onClick={clearFilters} disabled={!hasFilter}>
+              Clear filters
+            </button>
+            <button className="btn-primary" onClick={() => setShowFilteredDownload(true)} disabled={loading || filtered.length === 0}>
+              ⬇ Download report
+            </button>
+          </div>
         </div>
         {!loading && (
           <p className="mt-3 text-xs text-gray-500">
@@ -267,6 +273,12 @@ export default function Dashboard() {
         onCancel={() => setToDelete(null)}
       />
       <DownloadModal open={showDownload} onClose={() => setShowDownload(false)} title={`All domains (${domains.length})`} />
+      <DownloadModal
+        open={showFilteredDownload}
+        onClose={() => setShowFilteredDownload(false)}
+        title={`${hasFilter ? 'Filtered' : 'All'} domains (${filtered.length})`}
+        filters={{ doneBy: doneByFilter, domainName: domainFilter, status: statusFilter, siteType: siteTypeFilter }}
+      />
     </div>
   );
 }

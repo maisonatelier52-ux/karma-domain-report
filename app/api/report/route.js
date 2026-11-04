@@ -1,7 +1,7 @@
 import { connectDB } from '@/lib/db';
 import Domain from '@/lib/models/Domain';
 import { json, handle } from '@/lib/http';
-import { serialize } from '@/lib/domainUtils';
+import { escapeRegex, serialize } from '@/lib/domainUtils';
 import { parseFields } from '@/lib/fields';
 import { buildPdf } from '@/lib/reports/pdf';
 import { buildDocx } from '@/lib/reports/docx';
@@ -19,6 +19,7 @@ const TYPES = {
 
 // GET /api/report?format=pdf|docx|xlsx&fields=domainLink,doneBy,...&id=<domainId>
 // No id -> report for all domains. `fields` omitted -> all fields.
+// Optional dashboard filters (same as the filter dropdowns): doneBy, domainName, status (live|notlive), siteType.
 export const GET = handle(async (req) => {
   const sp = new URL(req.url).searchParams;
   const format = (sp.get('format') || 'pdf').toLowerCase();
@@ -29,12 +30,32 @@ export const GET = handle(async (req) => {
 
   await connectDB();
   let docs;
+  let filtered = false;
   if (id) {
     const one = await Domain.findById(id).lean();
     if (!one) return json({ error: 'Domain not found' }, 404);
     docs = [one];
   } else {
-    docs = await Domain.find().sort({ domainName: 1 }).lean();
+    const query = {};
+    const exact = (v) => new RegExp(`^${escapeRegex(v.trim())}$`, 'i');
+    const doneBy = sp.get('doneBy');
+    const domainName = sp.get('domainName');
+    const status = sp.get('status');
+    const siteType = sp.get('siteType');
+
+    if (doneBy) query.doneBy = exact(doneBy);
+    if (domainName) query.domainName = domainName.trim().toLowerCase();
+    if (status === 'live') query.domainLive = true;
+    if (status === 'notlive') query.domainLive = false;
+    if (siteType === '__none__') {
+      query.$or = [{ siteType: { $exists: false } }, { siteType: '' }, { siteType: null }];
+    } else if (siteType) {
+      query.siteType = exact(siteType);
+    }
+
+    docs = await Domain.find(query).sort({ domainName: 1 }).lean();
+    filtered = Object.keys(query).length > 0;
+    if (filtered && docs.length === 0) return json({ error: 'No domains match the selected filters' }, 404);
   }
   const domains = docs.map(serialize);
 
@@ -45,7 +66,7 @@ export const GET = handle(async (req) => {
   else body = await buildXlsx(args);
 
   const stamp = new Date().toISOString().slice(0, 10);
-  const name = id ? `${domains[0].domainName}-report` : `domain-report-${stamp}`;
+  const name = id ? `${domains[0].domainName}-report` : filtered ? `domain-report-filtered-${stamp}` : `domain-report-${stamp}`;
 
   return new Response(body, {
     headers: {

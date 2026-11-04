@@ -10,7 +10,8 @@ const FORMATS = [
 ];
 
 // id = a single domain id; leave empty to download the report for all domains.
-export default function DownloadModal({ open, onClose, id, title }) {
+// filters = optional { doneBy, domainName, status, siteType } so the report matches the dashboard filters.
+export default function DownloadModal({ open, onClose, id, title, filters }) {
   const [selected, setSelected] = useState(ALL_FIELD_KEYS);
   const [format, setFormat] = useState('pdf');
 
@@ -30,6 +31,7 @@ export default function DownloadModal({ open, onClose, id, title }) {
   const download = () => {
     const qs = new URLSearchParams({ format, fields: selected.join(',') });
     if (id) qs.set('id', id);
+    if (filters) Object.entries(filters).forEach(([k, v]) => v && qs.set(k, v));
     // Same-origin request: the login cookie is sent and the browser saves the file.
     window.location.href = `/api/report?${qs.toString()}`;
     onClose();
