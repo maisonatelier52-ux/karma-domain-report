@@ -94,6 +94,10 @@ export default function DomainDetailPage() {
             <dd className="text-sm">{d.doneBy}</dd>
           </div>
           <div className="grid gap-1 border-b border-gray-100 px-5 py-3 sm:grid-cols-[200px_1fr]">
+            <dt className="text-sm font-semibold text-gray-700">Site type</dt>
+            <dd className="text-sm">{d.siteType || <span className="text-gray-400">Not set</span>}</dd>
+          </div>
+          <div className="grid gap-1 border-b border-gray-100 px-5 py-3 sm:grid-cols-[200px_1fr]">
             <dt className="text-sm font-semibold text-gray-700">Domain status</dt>
             <dd className={`text-sm font-bold ${d.domainLive ? 'text-green-700' : 'text-red-700'}`}>
               {d.domainLive ? 'Live' : 'Not live'}

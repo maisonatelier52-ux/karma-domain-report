@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { SITE_TYPES } from '@/lib/fields';
 
 const emptyForm = {
   domainLink: '',
   domainLive: null,
   doneBy: '',
+  siteType: '',
   clientArticles: [''],
   vercelLink: '',
   githubLink: '',
@@ -96,6 +98,18 @@ export default function DomainForm({ initial, submitLabel = 'Save', onSubmit, on
 
       <section className="space-y-4 border-t border-gray-100 pt-6">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-maroon-700">Optional details</h2>
+
+        <div>
+          <label className="label">Site type</label>
+          <select className="input" value={form.siteType} onChange={(e) => set('siteType', e.target.value)}>
+            <option value="">Select site type</option>
+            {SITE_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div>
           <label className="label">Client article links</label>

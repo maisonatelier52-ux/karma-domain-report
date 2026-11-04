@@ -6,6 +6,7 @@ import { api } from '@/lib/apiClient';
 import StatusBadge from '@/components/StatusBadge';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import DownloadModal from '@/components/DownloadModal';
+import { SITE_TYPES } from '@/lib/fields';
 
 export default function Dashboard() {
   const [domains, setDomains] = useState([]);
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const [doneByFilter, setDoneByFilter] = useState('');
   const [domainFilter, setDomainFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState(''); // '' | 'live' | 'notlive'
+  const [siteTypeFilter, setSiteTypeFilter] = useState(''); // '' | one of SITE_TYPES | '__none__'
 
   const load = async () => {
     setLoading(true);
@@ -70,18 +72,21 @@ export default function Dashboard() {
       domains.filter((d) => {
         if (doneByFilter && d.doneBy.trim().toLowerCase() !== doneByFilter.toLowerCase()) return false;
         if (domainFilter && d.domainName !== domainFilter) return false;
+        if (siteTypeFilter === '__none__' && d.siteType) return false;
+        if (siteTypeFilter && siteTypeFilter !== '__none__' && d.siteType !== siteTypeFilter) return false;
         if (statusFilter === 'live' && !d.domainLive) return false;
         if (statusFilter === 'notlive' && d.domainLive) return false;
         return true;
       }),
-    [domains, doneByFilter, domainFilter, statusFilter]
+    [domains, doneByFilter, domainFilter, statusFilter, siteTypeFilter]
   );
 
-  const hasFilter = doneByFilter || domainFilter || statusFilter;
+  const hasFilter = doneByFilter || domainFilter || statusFilter || siteTypeFilter;
   const clearFilters = () => {
     setDoneByFilter('');
     setDomainFilter('');
     setStatusFilter('');
+    setSiteTypeFilter('');
   };
 
   const live = domains.filter((d) => d.domainLive).length;
@@ -122,7 +127,7 @@ export default function Dashboard() {
 
       {/* Filters */}
       <div className="card p-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] lg:items-end">
           <div>
             <label className="label">Done by</label>
             <select className="input" value={doneByFilter} onChange={(e) => setDoneByFilter(e.target.value)}>
@@ -144,6 +149,19 @@ export default function Dashboard() {
                   {n}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="label">Site type</label>
+            <select className="input" value={siteTypeFilter} onChange={(e) => setSiteTypeFilter(e.target.value)}>
+              <option value="">All site types</option>
+              {SITE_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+              <option value="__none__">Not set</option>
             </select>
           </div>
 
@@ -178,6 +196,7 @@ export default function Dashboard() {
                 <th className="px-4 py-3">Domain</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Done by</th>
+                <th className="px-4 py-3">Site type</th>
                 <th className="px-4 py-3">Articles</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
@@ -185,19 +204,19 @@ export default function Dashboard() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
                     Loading…
                   </td>
                 </tr>
               ) : domains.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
                     No domains yet. Click <b>Add domain</b> to create the first one.
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
                     No domains match these filters.{' '}
                     <button className="font-semibold text-maroon-700 hover:underline" onClick={clearFilters}>
                       Clear filters
@@ -216,6 +235,7 @@ export default function Dashboard() {
                       <StatusBadge live={d.domainLive} />
                     </td>
                     <td className="px-4 py-3 text-gray-700">{d.doneBy}</td>
+                    <td className="px-4 py-3 text-gray-700">{d.siteType || <span className="text-gray-400">—</span>}</td>
                     <td className="px-4 py-3 text-gray-700">{d.clientArticles.length}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
