@@ -1,0 +1,10 @@
+import Navbar from '@/components/Navbar';
+
+export default function AppLayout({ children }) {
+  return (
+    <div className="min-h-screen bg-maroon-50/40">
+      <Navbar />
+      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+    </div>
+  );
+}
