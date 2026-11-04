@@ -18,6 +18,13 @@ export const POST = handle(async (req) => {
   if (errors.length) return json({ error: errors.join('. ') }, 400);
 
   await connectDB();
+
+  // Block duplicates: "os-intel.com", "www.os-intel.com" and "https://os-intel.com/" are the same domain.
+  const exists = await Domain.findOne({ domainName: data.domainName }).lean();
+  if (exists) {
+    return json({ error: `The domain "${data.domainName}" already exists.` }, 409);
+  }
+
   const doc = await Domain.create(data);
   return json({ domain: serialize(doc.toObject()) }, 201);
 });

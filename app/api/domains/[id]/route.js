@@ -21,6 +21,13 @@ export const PUT = handle(async (req, { params }) => {
   if (errors.length) return json({ error: errors.join('. ') }, 400);
 
   await connectDB();
+
+  // Block renaming this domain to one that already exists on another entry.
+  const clash = await Domain.findOne({ domainName: data.domainName, _id: { $ne: id } }).lean();
+  if (clash) {
+    return json({ error: `The domain "${data.domainName}" already exists.` }, 409);
+  }
+
   const doc = await Domain.findByIdAndUpdate(id, data, { new: true, runValidators: true }).lean();
   if (!doc) return json({ error: 'Domain not found' }, 404);
   return json({ domain: serialize(doc) });
