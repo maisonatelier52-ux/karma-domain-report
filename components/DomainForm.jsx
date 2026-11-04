@@ -37,6 +37,7 @@ export default function DomainForm({ initial, submitLabel = 'Save', onSubmit, on
     if (!form.domainLink.trim()) return setError('Domain link is required');
     if (typeof form.domainLive !== 'boolean') return setError('Please choose whether the domain is live or not');
     if (!form.doneBy.trim()) return setError('Done by is required');
+    if (!form.siteType) return setError('Site type is required');
 
     setSaving(true);
     try {
@@ -94,13 +95,9 @@ export default function DomainForm({ initial, submitLabel = 'Save', onSubmit, on
           <label className="label">Done by{req}</label>
           <input className="input" placeholder="e.g. Dinu" value={form.doneBy} onChange={(e) => set('doneBy', e.target.value)} />
         </div>
-      </section>
-
-      <section className="space-y-4 border-t border-gray-100 pt-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-maroon-700">Optional details</h2>
 
         <div>
-          <label className="label">Site type</label>
+          <label className="label">Site type{req}</label>
           <select className="input" value={form.siteType} onChange={(e) => set('siteType', e.target.value)}>
             <option value="">Select site type</option>
             {SITE_TYPES.map((t) => (
@@ -110,6 +107,10 @@ export default function DomainForm({ initial, submitLabel = 'Save', onSubmit, on
             ))}
           </select>
         </div>
+      </section>
+
+      <section className="space-y-4 border-t border-gray-100 pt-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-maroon-700">Optional details</h2>
 
         <div>
           <label className="label">Client article links</label>
